@@ -1,3 +1,16 @@
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  addEdge,
+  Background,
+  BackgroundVariant,
+  Controls,
+  ReactFlow,
+  ReactFlowProvider,
+  useEdgesState,
+  useNodesState,
+} from '@xyflow/react';
+import axios from 'axios';
+import { AlertCircle, Check, CheckCircle2, ChevronDown, Cloud, FolderOpen, Languages, Pencil, Plus, Trash2, X } from 'lucide-react';
 import {
   ASSET_TYPE_OPTIONS,
   NODE_TYPES,
@@ -205,9 +218,12 @@ function AppInner() {
   }, [canvases, activeCanvasId, updateCanvasStore, showToast, tr]);
 
   const handleSwitchCanvas = useCallback((canvasId: string) => {
+    writeGraph(activeCanvasId, nodes, edges);
     setActiveCanvasId(canvasId);
     setShowCanvasMenu(false);
-  }, []);
+    setEditingNode(null);
+    setEditingEdge(null);
+  }, [activeCanvasId, nodes, edges]);
 
   const startRename = useCallback((canvas: LocalCanvas) => {
     setEditingCanvasId(canvas.id);
@@ -307,7 +323,7 @@ function AppInner() {
   const onNodeDragStop = useCallback(
     (_: any, node: TopologyNode) => {
       setNodes((ns: TopologyNode[]) =>
-        (ns.map((n: TopologyNode) => (n.id === node.id ? { ...n, position: node.position } : n)) as any[]
+        (ns.map((n: TopologyNode) => (n.id === node.id ? { ...n, position: node.position } : n)) as any[])
       );
       const raw = nodes.find((n: TopologyNode) => n.id === node.id);
       if (raw) axios.post(API_BASE + '/api/nodes', { ...raw, position: node.position }).catch(() => setSyncMode('local'));
@@ -380,7 +396,7 @@ function AppInner() {
         {toasts.map((ti) => (
           <div
             key={ti.id}
-            className={lex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium shadow-lg transition-all }
+            className='flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium shadow-lg transition-all'
           >
             {ti.type === 'success' ? <Check className='h-4 w-4' /> : <AlertCircle className='h-4 w-4' />}
             {ti.message}
@@ -403,7 +419,7 @@ function AppInner() {
               className='flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 hover:border-primary/40'
             >
               <Languages className='h-3.5 w-3.5' />
-              {lang === 'en' ? 'EN' : '����'}
+              {lang === 'en' ? 'EN' : 'ZH'}
             </button>
           </div>
 
@@ -412,13 +428,13 @@ function AppInner() {
             <button
               type='button'
               onClick={() => setShowCanvasMenu(!showCanvasMenu)}
-              className={lex w-full items-center gap-2 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100 }
+              className='flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
             >
               <FolderOpen className='h-4 w-4 shrink-0 text-slate-500' />
               <span className='flex-1 truncate text-left font-semibold text-slate-700'>
                 {activeCanvas?.name ?? tr('canvas.select')}
               </span>
-              <ChevronDown className={h-4 w-4 text-slate-400 transition } />
+              <ChevronDown className='h-4 w-4 text-slate-400 transition' />
             </button>
 
             {showCanvasMenu && (
@@ -427,7 +443,7 @@ function AppInner() {
                   {canvases.map((canvas) => (
                     <div
                       key={canvas.id}
-                      className={group flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition }
+                      className='group flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition'
                     >
                       {editingCanvasId === canvas.id ? (
                         <div className='flex flex-1 items-center gap-2'>
@@ -611,7 +627,7 @@ function AppInner() {
               return (
                 <div
                   key={at}
-                  className={\lex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-colors \\}
+                  className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-colors ${cls}`}
                   onClick={() => { setNodeType(at); setShowAddForm(true); }}
                   style={{ cursor: 'pointer' }}
                 >
@@ -638,7 +654,7 @@ function AppInner() {
         )}
         <div className='absolute right-4 top-4 z-10 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500 shadow'>
           <div
-            className={\h-1.5 w-1.5 rounded-full \\}
+            className={`h-1.5 w-1.5 rounded-full ${syncMode === 'api' ? 'bg-green-400' : 'bg-amber-400'}`}
           />
           {syncMode === 'api' ? tr('app.apiSync') : tr('app.localMode')}
         </div>
@@ -655,6 +671,8 @@ function AppInner() {
           onEdgeDoubleClick={onEdgeDoubleClick}
           fitView
           deleteKeyCode='Delete'
+          selectionOnDrag
+          panOnDrag={[2]}
         >
           <Controls />
           <Background variant={BackgroundVariant.Dots} gap={16} size={1} color='#e2e8f0' />

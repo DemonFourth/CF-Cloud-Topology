@@ -235,5 +235,5 @@ export interface LocalCanvas {
 export const LOCAL_CANVAS_STORE_KEY = 'cloud-topology-canvases';
 
 export function canvasGraphKey(canvasId: string): string {
-  return cloud-topology-graph-;
+  return 'cloud-topology-graph-' + canvasId;
 }
