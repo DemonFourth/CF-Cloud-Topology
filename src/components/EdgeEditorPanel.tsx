@@ -9,6 +9,7 @@ import {
   type EdgeStyle,
   type EdgeArrow,
 } from '../types';
+import { useI18n } from '../i18n';
 
 interface EdgeEditorPanelProps {
   edge: TopologyEdge | null;
@@ -17,11 +18,12 @@ interface EdgeEditorPanelProps {
   onDelete: (edgeId: string) => void;
 }
 
-const PRESET_LABELS = [
-  '解析到', '运行在', '调用', '依赖于', '同步到', '部署在', '连接至', '转发给',
+const PRESET_LABEL_KEYS = [
+  'resolvesTo', 'runsOn', 'calls', 'dependsOn', 'syncsTo', 'deployedOn', 'connectsTo', 'forwardsTo',
 ];
 
 export function EdgeEditorPanel({ edge, onClose, onSave, onDelete }: EdgeEditorPanelProps) {
+  const { t: tr } = useI18n();
   const [label, setLabel] = useState('');
   const [color, setColor] = useState('#94a3b8');
   const [style, setStyle] = useState<EdgeStyle>('solid');
@@ -45,7 +47,7 @@ export function EdgeEditorPanel({ edge, onClose, onSave, onDelete }: EdgeEditorP
   };
 
   const handleDelete = () => {
-    if (window.confirm('确定要删除这条连线吗？')) {
+    if (window.confirm(tr('app.deleteEdgeConfirm'))) {
       onDelete(edge.id);
       onClose();
     }
@@ -55,7 +57,7 @@ export function EdgeEditorPanel({ edge, onClose, onSave, onDelete }: EdgeEditorP
     <aside className="absolute left-1/2 top-4 z-20 flex w-72 -translate-x-1/2 flex-col rounded-xl border border-slate-200 bg-white shadow-2xl">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-        <span className="text-sm font-bold text-slate-700">编辑连线</span>
+        <span className="text-sm font-bold text-slate-700">{tr('app.edgeEditor')}</span>
         <button
           type="button"
           onClick={onClose}
@@ -69,7 +71,7 @@ export function EdgeEditorPanel({ edge, onClose, onSave, onDelete }: EdgeEditorP
       <div className="flex flex-col gap-4 p-4">
         {/* Edge ID */}
         <div className="space-y-1">
-          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">连线 ID</label>
+          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{tr('app.edgeId')}</label>
           <div className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 font-mono text-[10px] text-slate-500 break-all">
             {edge.id}
           </div>
@@ -77,35 +79,38 @@ export function EdgeEditorPanel({ edge, onClose, onSave, onDelete }: EdgeEditorP
 
         {/* Label */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">关系标签</label>
+          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{tr('app.edgeLabel')}</label>
           <input
             type="text"
             className="input input-bordered input-sm w-full text-sm"
-            placeholder="例如: 解析到"
+            placeholder={tr('app.labelPlaceholder')}
             value={label}
             onChange={(e) => setLabel(e.target.value)}
           />
           <div className="flex flex-wrap gap-1">
-            {PRESET_LABELS.map((lbl) => (
-              <button
-                key={lbl}
-                type="button"
-                onClick={() => setLabel(lbl)}
-                className={`rounded-full px-2 py-0.5 text-[10px] transition ${
-                  label === lbl
-                    ? 'bg-primary text-white'
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                }`}
-              >
-                {lbl}
-              </button>
-            ))}
+            {PRESET_LABEL_KEYS.map((k) => {
+              const lbl = tr('app.presetLabel.' + k);
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setLabel(lbl)}
+                  className={`rounded-full px-2 py-0.5 text-[10px] transition ${
+                    label === lbl
+                      ? 'bg-primary text-white'
+                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                  }`}
+                >
+                  {lbl}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Color */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">颜色</label>
+          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{tr('app.edgeColor')}</label>
           <div className="flex flex-wrap gap-2">
             {EDGE_COLORS.map((c) => (
               <button
@@ -116,7 +121,7 @@ export function EdgeEditorPanel({ edge, onClose, onSave, onDelete }: EdgeEditorP
                   color === c.value ? 'border-slate-800 scale-110' : 'border-transparent hover:scale-110'
                 }`}
                 style={{ backgroundColor: c.value }}
-                title={c.label}
+                title={tr('app.color.' + c.label.toLowerCase())}
               />
             ))}
           </div>
@@ -124,7 +129,7 @@ export function EdgeEditorPanel({ edge, onClose, onSave, onDelete }: EdgeEditorP
 
         {/* Style */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">线条样式</label>
+          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{tr('app.edgeStyle')}</label>
           <div className="flex gap-2">
             {EDGE_STYLE_OPTIONS.map((opt) => (
               <button
@@ -137,7 +142,7 @@ export function EdgeEditorPanel({ edge, onClose, onSave, onDelete }: EdgeEditorP
                     : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                 }`}
               >
-                {opt.label}
+                {tr('app.style' + opt.value.charAt(0).toUpperCase() + opt.value.slice(1))}
               </button>
             ))}
           </div>
@@ -153,7 +158,7 @@ export function EdgeEditorPanel({ edge, onClose, onSave, onDelete }: EdgeEditorP
 
         {/* Arrow */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">箭头方向</label>
+          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{tr('app.edgeArrow')}</label>
           <div className="grid grid-cols-2 gap-2">
             {EDGE_ARROW_OPTIONS.map((opt) => (
               <button
@@ -166,7 +171,7 @@ export function EdgeEditorPanel({ edge, onClose, onSave, onDelete }: EdgeEditorP
                     : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                 }`}
               >
-                {opt.label}
+                {tr('app.' + (opt.value === 'none' ? 'noArrow' : 'arrow' + opt.value.charAt(0).toUpperCase() + opt.value.slice(1)))}
               </button>
             ))}
           </div>
@@ -181,14 +186,14 @@ export function EdgeEditorPanel({ edge, onClose, onSave, onDelete }: EdgeEditorP
           className="btn btn-outline btn-error btn-sm gap-1"
         >
           <Trash2 className="h-3 w-3" />
-          删除
+          {tr('app.delete')}
         </button>
         <div className="flex-1" />
         <button type="button" onClick={onClose} className="btn btn-ghost btn-sm">
-          取消
+          {tr('app.cancel')}
         </button>
         <button type="button" onClick={handleSave} className="btn btn-primary btn-sm">
-          保存
+          {tr('app.save')}
         </button>
       </div>
     </aside>
