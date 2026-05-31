@@ -310,13 +310,9 @@ function AppInner() {
 
   const onConnect = useCallback((params: any) => {
     if (!params.source || !params.target) return;
-    const id = 'e-' + params.source + '-' + params.target + '-' + Date.now();
-    const newEdge: TopologyEdge = {
-      id,
-      source: params.source,
-      target: params.target,
-      type: 'custom',
-      data: { label: '', color: '#94a3b8', style: 'solid', arrow: 'target' },
+    const newEdge = {
+      ...params,
+      id: 'e-' + params.source + '-' + params.target + '-' + Date.now(),
     };
     setEdges((es: TopologyEdge[]) => addEdge(newEdge, es) as TopologyEdge[]);
     axios.post(API_BASE + '/api/edges', newEdge).catch(() => setSyncMode('local'));
@@ -675,6 +671,7 @@ function AppInner() {
           deleteKeyCode='Delete'
           selectionOnDrag
           panOnDrag={[2]}
+          defaultEdgeOptions={{ type: 'custom', data: { label: '', color: '#94a3b8', style: 'solid', arrow: 'target' } }}
         >
           <Controls />
           <Background variant={BackgroundVariant.Dots} gap={16} size={1} color='#e2e8f0' />
