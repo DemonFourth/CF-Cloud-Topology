@@ -11,6 +11,7 @@ import {
 } from '@xyflow/react';
 import axios from 'axios';
 import { AlertCircle, Check, CheckCircle2, ChevronDown, Cloud, FolderOpen, Languages, Pencil, Plus, Trash2, X } from 'lucide-react';
+import '@xyflow/react/dist/style.css';
 import {
   ASSET_TYPE_OPTIONS,
   NODE_TYPES,
