@@ -315,6 +315,7 @@ function AppInner() {
       id,
       source: params.source,
       target: params.target,
+      type: 'custom',
       data: { label: '', color: '#94a3b8', style: 'solid', arrow: 'target' },
     };
     setEdges((es: TopologyEdge[]) => addEdge(newEdge, es) as TopologyEdge[]);
