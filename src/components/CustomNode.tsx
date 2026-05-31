@@ -53,7 +53,7 @@ export function CustomNode({ id, data, selected }: CustomNodeProps) {
           return (
             <div key={key} className="flex gap-1 text-[10px] text-slate-500">
               <span className="font-medium">{key}:</span>
-              <span className="break-all">{String(val)}</span>
+              <span className="truncate max-w-\[180px\]" title={String(val)}>{String(val)}</span>
             </div>
           );
         })}
