@@ -1,4 +1,4 @@
-import { Handle, Position } from '@xyflow/react';
+﻿import { Handle, Position } from '@xyflow/react';
 import { Trash2, Edit3 } from 'lucide-react';
 import { NODE_TYPES, type TopologyNodeData } from '../types';
 import { getIconByName } from './IconPicker';
@@ -50,10 +50,11 @@ export function CustomNode({ id, data, selected }: CustomNodeProps) {
         {metaKeys.map((key) => {
           const val = data.metadata?.[key];
           if (val === undefined || val === '' || val === null) return null;
+          const displayVal = String(val);
           return (
-            <div key={key} className="flex gap-1 text-[10px] text-slate-500">
-              <span className="font-medium">{key}:</span>
-              <span className="truncate max-w-\[180px\]" title={String(val)}>{String(val)}</span>
+            <div key={key} className="group flex gap-1 text-[10px] text-slate-500">
+              <span className="truncate max-w-[60px] font-medium" title={key}>{key}:</span>
+              <span className="truncate max-w-[140px]" title={displayVal}>{displayVal}</span>
             </div>
           );
         })}

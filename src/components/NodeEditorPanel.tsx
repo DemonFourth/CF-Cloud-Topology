@@ -1,8 +1,7 @@
-import { X, Trash2, Plus, Key, Palette } from 'lucide-react';
+﻿import { X, Trash2, Plus, Key, Palette } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { ASSET_TYPE_OPTIONS, NODE_TYPES, type AssetType } from '../types';
 import { IconPicker, getIconByName } from './IconPicker';
-import { useI18n } from '../i18n';
 
 interface NodeEditorPanelProps {
   node: any;
@@ -11,10 +10,17 @@ interface NodeEditorPanelProps {
   onDelete: (nodeId: string) => void;
 }
 
-interface MetaEntry { key: string; value: string; }
+interface MetaEntry {
+  key: string;
+  value: string;
+}
+
+// P1: Metadata limits
+const MAX_META_ENTRIES = 20;
+const MAX_KEY_LENGTH = 64;
+const MAX_VALUE_LENGTH = 512;
 
 export function NodeEditorPanel({ node, onClose, onSave, onDelete }: NodeEditorPanelProps) {
-  const { t: tr } = useI18n();
   const [label, setLabel] = useState('');
   const [type, setType] = useState<AssetType>('provider');
   const [iconName, setIconName] = useState<string | undefined>(undefined);
@@ -46,13 +52,15 @@ export function NodeEditorPanel({ node, onClose, onSave, onDelete }: NodeEditorP
   };
 
   const handleDelete = () => {
-    if (window.confirm(tr('app.deleteNodeConfirm', { label: node.data.label }))) {
+    if (window.confirm('Delete node "' + node.data.label + '"? This cannot be undone.')) {
       onDelete(node.id);
       onClose();
     }
   };
 
   const handleMetaChange = (index: number, field: 'key' | 'value', val: string) => {
+    const maxLen = field === 'key' ? MAX_KEY_LENGTH : MAX_VALUE_LENGTH;
+    if (val.length > maxLen) return;
     setMeta(meta => meta.map((e, i) => i === index ? { ...e, [field]: val } : e));
   };
 
@@ -63,6 +71,7 @@ export function NodeEditorPanel({ node, onClose, onSave, onDelete }: NodeEditorP
   const handleAddMeta = () => {
     if (!newKey.trim()) return;
     if (meta.some(e => e.key === newKey.trim())) return;
+    if (meta.length >= MAX_META_ENTRIES) return;
     setMeta(meta => [...meta, { key: newKey.trim(), value: newVal }]);
     setNewKey('');
     setNewVal('');
@@ -76,7 +85,8 @@ export function NodeEditorPanel({ node, onClose, onSave, onDelete }: NodeEditorP
   const defaultIcon = typeConfig.icon;
   const currentIcon = iconName ? getIconByName(iconName) : defaultIcon;
   const CurrentIcon = currentIcon ?? defaultIcon;
-
+  const DefaultIcon = defaultIcon;
+  const isAtLimit = meta.length >= MAX_META_ENTRIES;
   return (
     <>
       <aside className="absolute right-4 top-4 z-20 flex h-[calc(100%-2rem)] w-80 flex-col rounded-xl border border-slate-200 bg-white shadow-2xl">
@@ -86,7 +96,7 @@ export function NodeEditorPanel({ node, onClose, onSave, onDelete }: NodeEditorP
             <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: typeConfig.color + '20' }}>
               <CurrentIcon className="h-4 w-4" style={{ color: typeConfig.color }} />
             </div>
-            <span className="font-bold text-slate-700">{tr('app.editNode')}</span>
+            <span className="font-bold text-slate-700">Edit Node</span>
           </div>
           <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600">
             <X className="h-4 w-4" />
@@ -98,41 +108,41 @@ export function NodeEditorPanel({ node, onClose, onSave, onDelete }: NodeEditorP
 
           {/* Node ID */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-500">{tr('app.nodeId')}</label>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-500 max-w-full break-words overflow-hidden">
+            <label className="text-xs font-semibold text-slate-500">Node ID</label>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-500 break-all">
               {node.id}
             </div>
           </div>
 
           {/* Type */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-500">{tr('app.nodeType')}</label>
+            <label className="text-xs font-semibold text-slate-500">Node Type</label>
             <select className="select select-bordered w-full text-sm" value={type} onChange={(e) => setType(e.target.value as AssetType)}>
-              {ASSET_TYPE_OPTIONS.map((at) => <option key={at} value={at}>{tr('nodeTypes.' + at)}</option>)}
+              {ASSET_TYPE_OPTIONS.map((t) => <option key={t} value={t}>{NODE_TYPES[t].label}</option>)}
             </select>
           </div>
 
           {/* Icon Selector */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-500">{tr('app.icon')}</label>
+            <label className="text-xs font-semibold text-slate-500">Icon</label>
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 transition-all hover:border-primary/50 cursor-pointer"
                    style={{ borderColor: iconName ? '#3b82f6' : undefined, backgroundColor: iconName ? '#eff6ff' : undefined }}
                    onClick={() => setShowIconPicker(true)}
-                   title={tr('app.pickIcon')}
+                   title="Click to change icon"
               >
                 <CurrentIcon className="h-6 w-6" style={{ color: typeConfig.color }} />
               </div>
               <div className="flex-1">
                 <p className="text-xs text-slate-500">
-                  {iconName ? tr('app.customIcon', { name: iconName }) : tr('app.usingDefault')}
+                  {iconName ? 'Custom icon: ' + iconName : 'Using default from type'}
                 </p>
                 <button type="button" onClick={() => setShowIconPicker(true)} className="mt-1 flex items-center gap-1 text-xs text-primary hover:underline">
-                  <Palette className="h-3 w-3" /> {iconName ? tr('app.changeIcon') : tr('app.pickIcon')}
+                  <Palette className="h-3 w-3" /> {iconName ? 'Change icon' : 'Pick icon'}
                 </button>
               </div>
               {iconName && (
-                <button type="button" onClick={() => setIconName(undefined)} className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600" title={tr('app.cancel')}>
+                <button type="button" onClick={() => setIconName(undefined)} className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600" title="Use default icon">
                   <X className="h-3 w-3" />
                 </button>
               )}
@@ -141,20 +151,24 @@ export function NodeEditorPanel({ node, onClose, onSave, onDelete }: NodeEditorP
 
           {/* Label */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-500">{tr('app.displayName')}</label>
-            <input type="text" className="input input-bordered w-full text-sm" placeholder={tr('app.typeHere')} value={label} onChange={(e) => setLabel(e.target.value)} />
+            <label className="text-xs font-semibold text-slate-500">Display Name</label>
+            <input type="text" className="input input-bordered w-full text-sm" placeholder="Node label" value={label} onChange={(e) => setLabel(e.target.value)} />
           </div>
 
           {/* Metadata key-value editor */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-500">{tr('app.extendedProperties')}</label>
-              <span className="text-[10px] text-slate-400">{tr('app.clickToEdit')}</span>
+              <label className="text-xs font-semibold text-slate-500">Extended Properties</label>
+              <span className="text-[10px] text-slate-400">Click to edit</span>
             </div>
 
+            {/* P1: 数量限制提示 */}
+            {isAtLimit && (
+              <p className="text-xs text-amber-500">已达最大属性数量（{MAX_META_ENTRIES}）</p>
+            )}
+
             <div className="space-y-1.5">
-              {meta.length === 0 && <p className="text-xs text-slate-400 py-2">{tr('app.noProperties')}</p>}
-              {meta.map((entry, i) => (
+              {meta.length === 0 && <p className="text-xs text-slate-400 py-2">No properties. Add below.</p>}              {meta.map((entry, i) => (
                 <div key={i} className="flex items-center gap-1.5">
                   <Key className="h-3 w-3 shrink-0 text-slate-400" />
                   <input
@@ -162,7 +176,8 @@ export function NodeEditorPanel({ node, onClose, onSave, onDelete }: NodeEditorP
                     className="flex-1 input input-bordered input-xs font-mono"
                     value={entry.key}
                     onChange={(e) => handleMetaChange(i, 'key', e.target.value)}
-                    placeholder={tr('app.typeHere')}
+                    placeholder="key"
+                    maxLength={MAX_KEY_LENGTH}
                   />
                   <span className="text-slate-400 text-xs">=</span>
                   <input
@@ -170,7 +185,8 @@ export function NodeEditorPanel({ node, onClose, onSave, onDelete }: NodeEditorP
                     className="flex-1 input input-bordered input-xs font-mono"
                     value={entry.value}
                     onChange={(e) => handleMetaChange(i, 'value', e.target.value)}
-                    placeholder={tr('app.typeHere')}
+                    placeholder="value"
+                    maxLength={MAX_VALUE_LENGTH}
                   />
                   <button
                     type="button"
@@ -192,7 +208,9 @@ export function NodeEditorPanel({ node, onClose, onSave, onDelete }: NodeEditorP
                 value={newKey}
                 onChange={(e) => setNewKey(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={tr('app.typeHere')}
+                placeholder="new key..."
+                maxLength={MAX_KEY_LENGTH}
+                disabled={isAtLimit}
               />
               <span className="text-slate-400 text-xs">=</span>
               <input
@@ -201,13 +219,15 @@ export function NodeEditorPanel({ node, onClose, onSave, onDelete }: NodeEditorP
                 value={newVal}
                 onChange={(e) => setNewVal(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={tr('app.typeHere')}
+                placeholder="value..."
+                maxLength={MAX_VALUE_LENGTH}
+                disabled={isAtLimit}
               />
               <button
                 type="button"
                 onClick={handleAddMeta}
                 className="rounded p-0.5 text-green-600 transition hover:bg-green-50 shrink-0"
-                disabled={!newKey.trim() || meta.some(e => e.key === newKey.trim())}
+                disabled={!newKey.trim() || meta.some(e => e.key === newKey.trim()) || isAtLimit}
               >
                 <Plus className="h-3 w-3" />
               </button>
@@ -218,11 +238,12 @@ export function NodeEditorPanel({ node, onClose, onSave, onDelete }: NodeEditorP
         {/* Footer */}
         <div className="flex gap-2 border-t border-slate-100 p-4">
           <button type="button" onClick={handleDelete} className="btn btn-outline btn-error btn-sm gap-1">
-            <Trash2 className="h-3.5 w-3.5" /> {tr('app.delete')}
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete
           </button>
           <div className="flex-1" />
-          <button type="button" onClick={onClose} className="btn btn-ghost btn-sm">{tr('app.cancel')}</button>
-          <button type="button" onClick={handleSave} className="btn btn-primary btn-sm" disabled={!label.trim()}>{tr('app.save')}</button>
+          <button type="button" onClick={onClose} className="btn btn-ghost btn-sm">Cancel</button>
+          <button type="button" onClick={handleSave} className="btn btn-primary btn-sm" disabled={!label.trim()}>Save</button>
         </div>
       </aside>
 

@@ -1,4 +1,4 @@
-import {
+﻿import {
   Shield, Globe2, AppWindow, Database, HardDrive,
   Mail, Lock, Container, Server, Cpu, Layers, Wifi, Key,
   Activity, Box, Link2, Globe, Zap, Code, GitBranch,
@@ -224,3 +224,16 @@ export const EDGE_ARROW_OPTIONS: { value: EdgeArrow; label: string }[] = [
 ];
 
 export const LOCAL_GRAPH_KEY = 'cloud-topology-graph-v3';
+
+export interface LocalCanvas {
+  id: string;
+  name: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export const LOCAL_CANVAS_STORE_KEY = 'cloud-topology-canvases';
+
+export function canvasGraphKey(canvasId: string): string {
+  return cloud-topology-graph-;
+}
