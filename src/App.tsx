@@ -304,7 +304,7 @@ function AppInner() {
     setEditingNode(node);
   }, []);
 
-  const onEdgeDoubleClick = useCallback((_: any, edge: TopologyEdge) => {
+  const onEdgeClick = useCallback((_: any, edge: TopologyEdge) => {
     setEditingEdge(edge);
   }, []);
 
@@ -669,7 +669,7 @@ function AppInner() {
           onConnect={onConnect}
           onNodeDragStop={onNodeDragStop}
           onNodeClick={onNodeClick}
-          onEdgeDoubleClick={onEdgeDoubleClick}
+          onEdgeClick={onEdgeClick}
           fitView
           deleteKeyCode='Delete'
           selectionOnDrag
